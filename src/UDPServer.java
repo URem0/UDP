@@ -17,20 +17,23 @@ public class UDPServer {
         return this.state;
     }
 
+    public String printMSG(DatagramPacket msg){
+        String word = new String(msg.getData()).trim();
+        InetAddress address = msg.getAddress();
+        int port = msg.getPort();
+        System.out.println(word + " from " + address + " port:" + port);
+        return word;
+    }
+
     public void launch() throws IOException {
         DatagramSocket socket = new DatagramSocket(this.port);
-
         while (this.state.equals("listening")) {
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             socket.receive(packet);
-            String word = new String(packet.getData()).trim();
-            InetAddress address = packet.getAddress();
-            int port = packet.getPort();
-
+            String word = printMSG(packet);
             if (word.equals("exit")){
                 this.state = "close";
             }
-            System.out.println(word + " from " + address + " port :" + port);
         }
         socket.close();
     }
