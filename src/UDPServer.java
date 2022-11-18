@@ -3,17 +3,16 @@ import java.net.*;
 
 
 public class UDPServer {
-
-    public int port;
-    public String state;
-    final byte[] buf = new byte[1024];
+    private State state;
+    public int port = 8080;
+    byte[] buf;
+    int bufSize = 1024;
 
     public UDPServer(int port){
         this.port = port;
     }
 
-    @Override
-    public String toString(){
+    public State ServerState(){
         return this.state;
     }
 
@@ -26,15 +25,19 @@ public class UDPServer {
     }
 
     public void launch() throws IOException {
+        System.out.println("-------Open Server---------");
+        state = State.LISTENING;
         DatagramSocket socket = new DatagramSocket(this.port);
-        while (this.state.equals("listening")) {
+        while (state == State.LISTENING) {
+            buf = new byte[bufSize];
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             socket.receive(packet);
             String word = printMSG(packet);
             if (word.equals("exit")){
-                this.state = "close";
+                state = State.CLOSE;
             }
         }
+        System.out.println("-------Close Server---------");
         socket.close();
     }
 
@@ -44,7 +47,6 @@ public class UDPServer {
             p = Integer.parseInt(args[0]);
         }
         UDPServer server = new UDPServer(p);
-        server.state = "listening";
         server.launch();
     }
 }
