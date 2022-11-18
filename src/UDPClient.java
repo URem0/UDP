@@ -3,44 +3,64 @@ import java.net.*;
 
 public class UDPClient {
     private static int portCLIENT = 5490 ;
-    private int portDST;
-    private String state = "open";
+    private int portDST = 8080;
+    private State state;
     private DatagramSocket socket;
     private InetAddress addressDST;
+    private String dst = "localhost";
 
+    public enum State {
+        CLOSE,
+        RUNNING
+    }
 
-    public UDPClient(String dst, int portDST) throws Exception {
+    private void setState(State state){
+        this.state = state;
+    }
+
+    private State ClientState(){
+        return this.state;
+    }
+
+    private void setDST(String dst){
+        this.dst = dst;
+    }
+
+    private void setPortDST(int portDST){
         this.portDST = portDST;
+    }
+
+    public UDPClient() throws Exception {
         this.socket = new DatagramSocket(portCLIENT);
-        this.addressDST = InetAddress.getByName(dst);
+        this.addressDST = InetAddress.getByName(this.dst);
     }
 
     public void launch() throws Exception {
-        while (state.equals("open")) {
+        setState(State.RUNNING);
+        System.out.println("CUT ");
+        while (ClientState() == State.RUNNING) {
             System.out.println("Enter your message: ");
             Console c = System.console();
             String msg = c.readLine();
 
             if (msg.equals("exit")){
-                state = "close";
+                setState(State.CLOSE);
             }
 
-            DatagramPacket packet = new DatagramPacket(msg.getBytes(), msg.length(), addressDST ,portDST);
+            DatagramPacket packet = new DatagramPacket(msg.getBytes(), msg.getBytes().length, addressDST, portDST);
             socket.send(packet);
         }
         socket.close();
     }
 
     public static void main(String[] args) throws Exception {
-        int p = 8080;
-        String dst = "localhost";
+        UDPClient client = new UDPClient();
 
         if (args.length != 0 ){
-            dst = args[0];
-            p = Integer.parseInt(args[1]);
+            client.setDST(args[0]);
+            client.setPortDST(Integer.parseInt(args[1]));
         }
 
-        UDPClient client = new UDPClient(dst, p);
         client.launch();
     }
 }

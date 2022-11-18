@@ -8,45 +8,61 @@ public class UDPServer {
     byte[] buf;
     int bufSize = 1024;
 
-    public UDPServer(int port){
-        this.port = port;
+    public enum State {
+        CLOSE,
+        LISTENING
     }
 
-    public State ServerState(){
+    public void OpenMSG(){
+        System.out.println("-------Open Server---------");
+    }
+
+    public void CloseMSG(){
+        System.out.println("-------Close Server---------");
+    }
+
+    private State ServerState(){
         return this.state;
     }
 
-    public String printMSG(DatagramPacket msg){
+    private void setState(State state){
+        this.state = state;
+    }
+
+    private void setPort(int port){
+        this.port = port;
+    }
+
+    public void printMSG(DatagramPacket msg){
         String word = new String(msg.getData()).trim();
-        InetAddress address = msg.getAddress();
+        String host = msg.getAddress().getHostAddress();
         int port = msg.getPort();
-        System.out.println(word + " from " + address + " port:" + port);
-        return word;
+        System.out.println(word + " from " + host + " port:" + port);
     }
 
     public void launch() throws IOException {
-        System.out.println("-------Open Server---------");
-        state = State.LISTENING;
+        setState(State.LISTENING);
         DatagramSocket socket = new DatagramSocket(this.port);
-        while (state == State.LISTENING) {
+        while ( ServerState() == State.LISTENING) {
             buf = new byte[bufSize];
             DatagramPacket packet = new DatagramPacket(buf, buf.length);
             socket.receive(packet);
-            String word = printMSG(packet);
-            if (word.equals("exit")){
-                state = State.CLOSE;
+            printMSG(packet);
+            String msg = new String(packet.getData()).trim();
+            if (msg.equals("exit")){
+                setState(State.CLOSE);
             }
         }
-        System.out.println("-------Close Server---------");
         socket.close();
     }
 
     public static void main(String[] args) throws IOException {
-        int p = 8080;
+        UDPServer server = new UDPServer();
         if (args.length != 0 ){
-            p = Integer.parseInt(args[0]);
+            server.setPort(Integer.parseInt(args[0]));
         }
-        UDPServer server = new UDPServer(p);
+        server.OpenMSG();
         server.launch();
+        server.CloseMSG();
     }
 }
