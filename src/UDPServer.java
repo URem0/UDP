@@ -13,15 +13,15 @@ public class UDPServer {
         LISTENING
     }
 
-    public void OpenMSG(){
+    public void openMSG(){
         System.out.println("-------Open Server---------");
     }
 
-    public void CloseMSG(){
+    public void closeMSG(){
         System.out.println("-------Close Server---------");
     }
 
-    private State ServerState(){
+    private State serverState(){
         return this.state;
     }
 
@@ -33,6 +33,13 @@ public class UDPServer {
         this.port = port;
     }
 
+    public DatagramPacket getPacket(DatagramSocket socket) throws IOException {
+        buf = new byte[bufSize];
+        DatagramPacket packet = new DatagramPacket(buf, buf.length);
+        socket.receive(packet);
+        return packet;
+    }
+
     public void printMSG(DatagramPacket msg){
         String word = new String(msg.getData()).trim();
         String host = msg.getAddress().getHostAddress();
@@ -40,20 +47,30 @@ public class UDPServer {
         System.out.println(word + " from " + host + " port:" + port);
     }
 
+    public String convertDatagramToString(DatagramPacket msg){
+        return new String(msg.getData()).trim();
+    }
+
+    public void checkCloseMSG(String msg){
+        if (msg.equals("close")){
+            setState(State.CLOSE);
+        }
+    }
+
     public void launch() throws IOException {
+        openMSG();
         setState(State.LISTENING);
         DatagramSocket socket = new DatagramSocket(this.port);
-        while ( ServerState() == State.LISTENING) {
-            buf = new byte[bufSize];
-            DatagramPacket packet = new DatagramPacket(buf, buf.length);
-            socket.receive(packet);
-            printMSG(packet);
-            String msg = new String(packet.getData()).trim();
-            if (msg.equals("exit")){
-                setState(State.CLOSE);
-            }
+
+        while (serverState() == State.LISTENING) {
+            DatagramPacket msg = getPacket(socket);
+            printMSG(msg);
+            String mess = convertDatagramToString(msg);
+            checkCloseMSG(mess);
         }
+
         socket.close();
+        closeMSG();
     }
 
     public static void main(String[] args) throws IOException {
@@ -61,8 +78,6 @@ public class UDPServer {
         if (args.length != 0 ){
             server.setPort(Integer.parseInt(args[0]));
         }
-        server.OpenMSG();
         server.launch();
-        server.CloseMSG();
     }
 }

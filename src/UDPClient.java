@@ -1,8 +1,9 @@
 import java.io.Console;
+import java.io.IOException;
 import java.net.*;
 
 public class UDPClient {
-    private static int portCLIENT = 5490 ;
+    private static final int portCLIENT = 5490 ;
     private int portDST = 8080;
     private State state;
     private DatagramSocket socket;
@@ -14,11 +15,19 @@ public class UDPClient {
         RUNNING
     }
 
+    public void openMSG(){
+        System.out.println("-------Open Client---------");
+    }
+
+    public void closeMSG(){
+        System.out.println("-------Close Client---------");
+    }
+
     private void setState(State state){
         this.state = state;
     }
 
-    private State ClientState(){
+    private State clientState(){
         return this.state;
     }
 
@@ -35,22 +44,36 @@ public class UDPClient {
         this.addressDST = InetAddress.getByName(this.dst);
     }
 
-    public void launch() throws Exception {
-        setState(State.RUNNING);
-        System.out.println("CUT ");
-        while (ClientState() == State.RUNNING) {
-            System.out.println("Enter your message: ");
-            Console c = System.console();
-            String msg = c.readLine();
+    public String clientMSG(){
+        System.out.println("Enter your message: ");
+        Console c = System.console();
+        String msg = c.readLine();
+        return msg;
+    }
 
-            if (msg.equals("exit")){
-                setState(State.CLOSE);
-            }
-
-            DatagramPacket packet = new DatagramPacket(msg.getBytes(), msg.getBytes().length, addressDST, portDST);
-            socket.send(packet);
+    public void checkCloseMSG(String msg){
+        if (msg.equals("close")){
+            setState(State.CLOSE);
         }
+    }
+
+    public void sendMSG(String msg, DatagramSocket socket, InetAddress addressDST, int portDST) throws IOException {
+        DatagramPacket packet = new DatagramPacket(msg.getBytes(), msg.getBytes().length, addressDST, portDST);
+        socket.send(packet);
+    }
+
+    public void launch() throws Exception {
+        openMSG();
+        setState(State.RUNNING);
+
+        while (clientState() == State.RUNNING) {
+            String msg = clientMSG();
+            sendMSG(msg, socket, addressDST, portDST);
+            checkCloseMSG(msg);
+        }
+
         socket.close();
+        closeMSG();
     }
 
     public static void main(String[] args) throws Exception {
