@@ -1,7 +1,13 @@
 import java.io.IOException;
 import java.net.*;
 
-
+/***
+ * UDP Server Class on port 8080 by default.
+ * Specify as argument a port number to set a new port
+ *
+ * @author Rémy UM, Osama RAIES HADJ BOUBAKER
+ * @author  ENSEA RTS
+ */
 public class UDPServer {
     private State state;
     public int port = 8080;
@@ -33,6 +39,12 @@ public class UDPServer {
         this.port = port;
     }
 
+    /***
+     * Receives the packet from a client
+     * @param socket sokcet of the server
+     * @return the client packet
+     * @throws IOException
+     */
     public DatagramPacket getPacket(DatagramSocket socket) throws IOException {
         buf = new byte[bufSize];
         DatagramPacket packet = new DatagramPacket(buf, buf.length);
@@ -40,6 +52,10 @@ public class UDPServer {
         return packet;
     }
 
+    /***
+     * Prints the client message into the console
+     * @param msg
+     */
     public void printMSG(DatagramPacket msg){
         String word = new String(msg.getData()).trim();
         String host = msg.getAddress().getHostAddress();
@@ -47,10 +63,19 @@ public class UDPServer {
         System.out.println(word + " from " + host + " port:" + port);
     }
 
+    /***
+     * Converts a DatagramPacket into a String
+     * @param msg DatagramPacket
+     * @return
+     */
     public String convertDatagramToString(DatagramPacket msg){
         return new String(msg.getData()).trim();
     }
 
+    /***
+     * Checks if the server receive a close message
+     * @param msg
+     */
     public void checkCloseMSG(String msg){
         if (msg.equals("close")){
             setState(State.CLOSE);
